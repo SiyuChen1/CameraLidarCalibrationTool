@@ -9,6 +9,9 @@ set(CMAKE_CXX_FLAGS
         )
 
 find_package(catkin REQUIRED COMPONENTS
+        message_generation
+        pcl_conversions
+        pcl_ros
         cv_bridge
         image_transport
         roscpp
@@ -17,13 +20,28 @@ find_package(catkin REQUIRED COMPONENTS
         rviz
 )
 
+## Generate messages in the 'msg' folder
+add_message_files(FILES
+  projection_matrix.msg
+  PointsImage.msg
+)
+
+# find PCL package
+find_package(PCL REQUIRED)
+message(STATUS "    PCL version: ${PCL_VERSION}")
+message(STATUS "    PCL include path: ${PCL_INCLUDE_DIRS}")
+
 #find OpenCV
 find_package(OpenCV REQUIRED)
 message(STATUS "    OpenCV version: ${OpenCV_VERSION}")
 message(STATUS "    OpenCV include path: ${OpenCV_INCLUDE_DIRS}")
 
+generate_messages(DEPENDENCIES
+  std_msgs
+)
+
 catkin_package(
-        DEPENDS rviz OpenCV
+        DEPENDS rviz OpenCV PCL message_runtime
 )
 
 
@@ -80,6 +98,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         include
         src
+        ${PCL_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
         
 )
@@ -138,4 +157,5 @@ install(FILES
 add_dependencies(${PROJECT_NAME}
   ${catkin_EXPORTED_TARGETS}
   ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
   )

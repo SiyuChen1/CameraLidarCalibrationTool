@@ -11,6 +11,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>  // opencv 常用头文件
 
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl/common/transforms.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/voxel_grid.h>
+
 #include "convert_image.h" // opencv Mat格式转换成 QImage QPixmap
 
 #include <ros/ros.h>
@@ -18,6 +25,10 @@
 
 #include <rviz/panel.h>   //plugin基类的头文件
 #include <sensor_msgs/Image.h>
+#include <std_msgs/String.h>
+#include <std_msgs/UInt32.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include "ui_calibration.h"  // 使用.ui 文件时必须 #include "ui_*.h"
 
@@ -25,9 +36,19 @@
 
 #include <QGraphicsView>
 
+#include <QMap>
+
 #include <QGraphicsItem>
 
+#include <QStringListModel>
+
+#include <QStandardItemModel>
+
 #include <QGraphicsScene>
+
+#include "rviz_calibration/projection_matrix.h"
+
+#include "rviz_calibration/PointsImage.h"
 
 #include "mainwindow.h"
 
@@ -35,6 +56,16 @@
 
 namespace rviz_calibration
 {
+
+class DrawPoints{
+  public:
+    explicit DrawPoints(void);
+    void Draw(const rviz_calibration::PointsImage::ConstPtr& points, cv::Mat& image, int drawn_size);
+
+  private:
+    cv::Mat color_map_;
+
+};
 
 // 所有的plugin都必须是rviz::Panel的子类
 class ImageCalibrator: public rviz::Panel
@@ -58,13 +89,27 @@ public:
     // The function to update topic list that can be selected from the UI
     void UpdateTopicList(void);
 
+    void UpdatePointCloudTopicList();
+
     //The event filter to catch clicking on combo box
     bool eventFilter(QObject* object, QEvent* event);
 
     //The function callback
-    void ImageCallback(const sensor_msgs::CompressedImage::ConstPtr& msg);
-    //void ImageCallback(const sensor_msgs::Image::ConstPtr& msg);
+    void CompressedImageCallback(const sensor_msgs::CompressedImage::ConstPtr& msg);
     
+    void ImageCallback(const sensor_msgs::Image::ConstPtr& msg);
+    
+    void ImageHeaderCallback(const sensor_msgs::Image::ConstPtr& msg);
+
+    void CompressedHeaderImageCallback(const sensor_msgs::CompressedImage::ConstPtr& msg);
+
+    void HeaderCallback(const std_msgs::Header::ConstPtr& header);
+
+    void DistCorrectionCompressedImageCallback(const sensor_msgs::CompressedImage::ConstPtr& msg);
+
+    void DistCorrectionImageCallback(const sensor_msgs::Image::ConstPtr& msg);
+
+    void PointCloud2ImageCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
     //rewrite the paint function
     void paintEvent(QPaintEvent *e);
@@ -78,17 +123,64 @@ public:
     //The Queue is used to transmit points
     ThreadSafeQueue<QPoint> point_trans_buffer;
 
+    void showImage(QPixmap &picture);
+
+    void ReadCameraParameter(QString parameter_path);
+
+    QString Mat2QString(cv::Mat &mat);
+
+    void pointerManagement(QStandardItem* p);
+
+    void pointsCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+
+    void initMatrix(const cv::Mat& cameraExtrinsicMat);
+
+    rviz_calibration::PointsImage pointcloud2_to_image(const sensor_msgs::PointCloud2::ConstPtr& pointcloud2, const cv::Mat& cameraExtrinsicMat, const cv::Mat& cameraMat,
+        const cv::Mat& distCoeff, const cv::Size& imageSize);
 
 private:
 
+    QMap<QString,QString> map_topicName_topicType;
     //the subscriber 
     ros::Subscriber sub_image;
+
+    ros::Subscriber sub_points;
+
+    ros::Publisher pub_points;
+
+    ros::Subscriber sub_image_for_rect;
+
+    ros::Subscriber sub_camerainfo;
+
+    ros::Publisher pub_image_rected;
+
+    ros::Publisher pub_time;
+
+    ros::Subscriber sub_header;
+
+    ros::Subscriber sub_points_no_groud;
+
+    ros::Publisher pub_point_image;
+
+    ros::Publisher pub_camerainfo;
+
+    //std_msgs::Header header_s;
 
     //the publisher
     ros::Publisher pub_point;
 
+    ros::Publisher pub_projection;
+
     //the rosnode
     ros::NodeHandle nh;
+
+    rviz_calibration::projection_matrix camera_to_wrold_projection;
+
+    rviz_calibration::PointsImage::Ptr points_image_msg;
+
+    std::string projection_matrix_name = "projection_matrix";
+
+    sensor_msgs::CameraInfo camera_info_msg_;
 
     //The UI components
     Ui::calibration ui;
@@ -107,8 +199,16 @@ private:
 
     QPixmap ima_show;
 
+    QString image_topic_name_current;
+
+    std::string image_topic_name_std;
+
     //const QString kImageDataType, select the type of message
-    const QString kImageDataType = "sensor_msgs";
+    const QString kImageDataType_1 = "sensor_msgs/Image";
+
+    const QString kImageDataType_2 = "sensor_msgs/CompressedImage";
+
+    const QString kPointCloudDataType = "sensor_msgs/PointCloud2";
 
     // The blank topic name
     const QString kBlankTopic = "-----";
@@ -123,6 +223,37 @@ private:
     int frame_video;
 
     int factor;
+
+    QString parameter_path = "";
+
+    cv::Mat CameraExtrinsicMat;
+    
+    cv::Mat CameraMat;
+    
+    cv::Mat DistCoeff;
+    
+    cv::Size ImageSize;
+    
+    std::string DistModel;
+
+    std::string CameraType;
+
+    QStringListModel *Model;
+
+    QStandardItemModel *ItemModel;
+
+    std::string camera_info_name = "camera_info";
+
+    bool camera_info_delivery = false;
+
+    bool init_matrix = false;
+
+    bool points_image_sended = false;
+
+    DrawPoints points_drawer;
+
+    cv::Mat invRt, invTt;
+
 
 Q_SIGNALS:
 
@@ -144,6 +275,8 @@ private Q_SLOTS:
 
     void image_topic_comboBox_activated(int index);
 
+    void comboBox_PointCloud_activated(int index);
+
     void showPoint(QPoint p);
 
     void clearSelectPonit();
@@ -154,7 +287,18 @@ private Q_SLOTS:
 
     void setVideoFrame(int i);
 
+    void openFile();
+
+    void ShowCameraInfo();
+
+    void PublishCameraInfo();
+
+    void StartRectifierNode();
+
+    void startConvertPoint2Image(bool checked);
+
 };
+
 
 class GraphicsView: public QGraphicsView
 {
