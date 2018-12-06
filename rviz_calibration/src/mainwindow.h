@@ -1,15 +1,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "paintwidget.h"
+#include "view.h"
+
 #include <QMainWindow>
 #include <QLabel>
 #include <QTextBrowser>
 #include <QPushButton>
 #include <QPointer>
 #include <QActionGroup>
-#include <QAction>
 #include <QToolBar>
-#include <QLabel>
 #include <QStatusBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -18,9 +19,12 @@
 #include <QStandardItemModel>
 #include <QModelIndex>
 #include <QStandardItem>
+#include <QAction>
+#include <QGraphicsView>
+#include <QFile>
+#include <QTextStream>
 
-#include "paintwidget.h"
-#include "view.h"
+
 
 namespace rviz_calibration
 {
@@ -35,33 +39,12 @@ public:
     QPixmap backgroundPic;
     PaintWidget *paintWidget;
     View *view;
-    // QPointer<QToolBar> bar;
-    // QPointer<QActionGroup> group;
-    // QPointer<QWidget> widget;
-    // //QPointer<QLabel> show;
-    // QLabel *show;
-    // QPointer<QHBoxLayout> ly;
-    // QPointer<QVBoxLayout> layout2;
-    // QPointer<QAction> drawLineAction;
-    // QPointer<QAction> drawRectAction;
-    // //QPointer<QLabel> statusMsg;
-    // QLabel *statusMsg;
-
-    // //QPointer<QLabel> testPointShow;
     QToolBar *bar;
-    // //QWidget *widget;
-    // QLabel *show;
-    // QPushButton *push;
-    // // QHBoxLayout *ly;
-    // // QVBoxLayout *layout2;
     QActionGroup *group;
     QLabel* testPointShow;
     QTextBrowser *tb;
     QListView *points_listview;
-    //QStringListModel *points_listview_model;
     QStandardItemModel *points_listview_itemModel;
-    
-    // QPointer<QPushButton> push;
 
     QString s;
     QString color_name = "";

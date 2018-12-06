@@ -115,8 +115,7 @@ void Line::setLineColor(int count)
                 line_color = Qt::darkYellow;
                 break;
         }                
-    } 
-    qDebug()<<"line";
+    }
     QBrush brush(line_color,Qt::SolidPattern);
     QPen pen(brush,1/this->scale,Qt::SolidLine,Qt::SquareCap,Qt::BevelJoin);
     setPen(pen);

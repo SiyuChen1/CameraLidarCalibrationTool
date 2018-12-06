@@ -1,50 +1,23 @@
 #include "mainwindow.h"
 
-#include <QActionGroup>
-#include <QAction>
-#include <QToolBar>
-#include <QLabel>
-#include <QStatusBar>
-#include <QGraphicsView>
-
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QPushButton>
-
-#include <QTextBrowser>
-
-#include <QFile>
-#include <QTextStream>
-
 namespace rviz_calibration
 {
-    MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent)
-    {
+{
         paintWidget = new PaintWidget(this);
         view = new View(this);
 
         bar = this->addToolBar("Tools");
-        //QToolBar *bar = this->addToolBar("Tools");
-
-        //QActionGroup *group = new QActionGroup(bar);
-
         group = new QActionGroup(bar);
 
         testPointShow = new QLabel(this);
         QWidget *widget = new QWidget(this);
-        // widget = new QWidget(this);
         QLabel *show = new QLabel(this);
-        // show = new QLabel(this);
-        // push = new QPushButton("test",this);
         QPushButton *push = new QPushButton("test",this);
         QHBoxLayout *ly = new QHBoxLayout;
-        // ly = new QHBoxLayout;
         QVBoxLayout *layout2 = new QVBoxLayout;
-        // layout2 = new QVBoxLayout;
         tb = new QTextBrowser(this);
-
-
         points_listview = new QListView(this);
         points_listview_itemModel = new QStandardItemModel(this);
 
@@ -55,7 +28,6 @@ namespace rviz_calibration
         ly->addWidget(testPointShow);
         ly->addWidget(push,1);
         layout2->addWidget(view,6);
-
         layout2->addLayout(ly,1);
         widget->setLayout(layout2);
 
@@ -79,15 +51,11 @@ namespace rviz_calibration
         QLabel *statusMsg = new QLabel(this);
         statusBar()->addWidget(statusMsg);
 
-
         setCentralWidget(widget);
 
         connect(drawLineAction, SIGNAL(triggered()), this, SLOT(drawLineActionTriggered()));
-
         connect(drawRectAction, SIGNAL(triggered()), this, SLOT(drawRectActionTriggered()));
-
-        connect(this, SIGNAL(changeCurrentShape(Shape::Code)),
-                        paintWidget, SLOT(setCurrentShape(Shape::Code)));
+        connect(this, SIGNAL(changeCurrentShape(Shape::Code)),paintWidget, SLOT(setCurrentShape(Shape::Code)));
         connect(view,SIGNAL(sendP(QPointF)),this,SLOT(showPoints(QPointF)));
         connect(push,SIGNAL(clicked(bool)),this,SLOT(writeFile()));
         connect(view,SIGNAL(sendColorIndex(int)),this,SLOT(showColorName(int)));
@@ -95,7 +63,7 @@ namespace rviz_calibration
         connect(view,SIGNAL(deleteLastPoint()),paintWidget,SLOT(removeLastItem()));
         connect(view,SIGNAL(scaleChanged(double)),paintWidget,SLOT(getScaleFactor(double)));
         connect(this,SIGNAL(changeViewScale()),view,SLOT(changeView()));
-    }
+}
 
 MainWindow::~MainWindow()
 {
@@ -103,49 +71,32 @@ MainWindow::~MainWindow()
     {
         delete paintWidget;
         paintWidget = NULL;
-        qDebug()<<"1 null";
     }
     if(view != NULL)
     {
         delete view;
         view = NULL;
-        qDebug()<<"2 null";
     }
     if(group != NULL)
     {
         delete group;
         group = NULL;
-        qDebug()<<"4 null";
     }
-    else
-    {
-        qDebug()<<"4.1 null";
-    } 
     if(bar != NULL)
     {
         delete bar;
         bar = NULL;
-        qDebug()<<"3 null";
     } 
     if(testPointShow != NULL)
     {
         delete testPointShow;
         testPointShow = NULL;
-        qDebug()<<"5 null";
-    }
-    else{
-        qDebug()<<"5.1 null";
     }
     if(tb != NULL)
     {
         delete tb;
         tb = NULL;
-        qDebug()<<"6 null";
     }
-    else{
-        qDebug()<<"6.1 null";
-    }
-
 }
 
 void MainWindow::resetViewScale()
@@ -264,7 +215,6 @@ void MainWindow::setBackGroundPic(QPixmap image)
 
 void MainWindow::showPoints(QPointF p)
 {
-    //qDebug()<<p<<"points from scene";
     testPointShow->setText(QString::number(p.x()) + "," + QString::number(p.y()));
     s += QString::number(p.x()) + "," + QString::number(p.y()) + "\n";
     tb->insertPlainText(QString::number(p.x()) + "," + QString::number(p.y()) + "\n");
@@ -291,7 +241,6 @@ void MainWindow::writeFile()
     QTextStream str(&file);
     str<<s<<endl;
     file.write("this is a test for myself \n");
-    //file.write(s);
     file.close();
 }
 

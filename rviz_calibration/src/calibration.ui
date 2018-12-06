@@ -17,58 +17,54 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>Tab 1</string>
+       <string>Image</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_12">
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,10,1">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,10,1">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,1,1">
+          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="4,1,2">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
+            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,2,1,4">
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,3,1,5">
-               <item>
-                <spacer name="horizontalSpacer_7">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>Image topic name</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>48</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QComboBox" name="image_topic_comboBox"/>
-               </item>
-              </layout>
+              <spacer name="horizontalSpacer_7">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>13</width>
+                 <height>24</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Image topic name</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>48</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QComboBox" name="image_topic_comboBox"/>
              </item>
             </layout>
            </item>
@@ -86,11 +82,29 @@
             </spacer>
            </item>
            <item>
-            <widget class="QCheckBox" name="StartRectifier">
-             <property name="text">
-              <string>Start Distortion Correction</string>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QCheckBox" name="StartRectifier">
+               <property name="text">
+                <string>Start Distortion Correction</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="display_points_on_image">
+               <property name="text">
+                <string>Display Points on Image</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="is_fisheye">
+               <property name="text">
+                <string>FishEye</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -267,10 +281,18 @@
         </layout>
        </item>
       </layout>
+      <zorder>label_3</zorder>
+      <zorder>comboBox</zorder>
+      <zorder>horizontalSpacer_12</zorder>
+      <zorder>checkBox</zorder>
+      <zorder>horizontalSpacer_13</zorder>
+      <zorder>display_points_on_image</zorder>
+      <zorder>is_fisheye</zorder>
+      <zorder></zorder>
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
-       <string>Tab 2</string>
+       <string>Show Camera Para</string>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_9">
        <item>
@@ -375,7 +397,7 @@
      </widget>
      <widget class="QWidget" name="tab_3">
       <attribute name="title">
-       <string>Page</string>
+       <string>PointCloud</string>
       </attribute>
       <widget class="QListView" name="listView_exandin">
        <property name="geometry">

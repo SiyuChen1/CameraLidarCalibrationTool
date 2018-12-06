@@ -2,10 +2,10 @@
 #define CONVERT_IMAGE_H_
 
 #include <QImage>
-#include <QPixmap>
+#include <QPixmap> // qt 库
 
 #include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv/highgui.h> // opencv 库
 
 namespace convert_image {
   inline QImage CvMatToQImage(const cv::Mat &input) {

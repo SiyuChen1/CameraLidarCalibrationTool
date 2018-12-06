@@ -1,9 +1,11 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include <rviz/panel.h>   //plugin基类的头文件
 #include <QGraphicsView>
-#include "paintwidget.h"
+#include <QMouseEvent>
+#include <QKeyEvent>
+#include <QGraphicsItem>
+#include <QTime>
 
 namespace rviz_calibration
 {

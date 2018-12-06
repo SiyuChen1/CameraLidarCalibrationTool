@@ -1,8 +1,8 @@
 #ifndef RECT_H
 #define RECT_H
 
-#include <QGraphicsRectItem>
 #include "shape.h"
+#include <QGraphicsRectItem>
 
 namespace rviz_calibration
 {

@@ -1,8 +1,6 @@
 #ifndef SHAPE_H
 #define SHAPE_H
 
-#include <ros/ros.h>
-
 #include <QGraphicsSceneMouseEvent>
 
 namespace rviz_calibration

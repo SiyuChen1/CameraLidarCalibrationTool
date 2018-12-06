@@ -1,26 +1,4 @@
-#include <stdio.h>
-
-#include <qpainter.h>
-#include <QPainter>
-#include <QLineEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QTimer>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QGraphicsScene>
-#include <QGraphicsView>
-#include <geometry_msgs/Twist.h>
-#include <QDebug>
-#include <QDialog>
-#include <QGraphicsItem>
-#include <QSpinBox>
-#include <QFileDialog>
-#include <QUrl>
-#include <QMessageBox>
- 
-#include "calibration.h"
+ #include "calibration.h"
 
  
 namespace rviz_calibration
@@ -28,40 +6,39 @@ namespace rviz_calibration
     // 构造函数，初始化变量
     ImageCalibrator::ImageCalibrator( QWidget* parent ):rviz::Panel( parent )
     {
-
-        //ui.pushButton->setObjectName("test");
         // Initialize Form
         ui.setupUi(this);
 
+        cv::Mat default_image = cv::imread("/home/nio/catkin_ws/src/rviz_calibration/src/nio.jpg");
+        QPixmap pixmap_default = convert_image::CvMatToQPixmap(default_image);
+        pixmap_default = pixmap_default.scaled(ui.labelImage->width(),ui.labelImage->height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        ui.labelImage->setPixmap(pixmap_default);
+
+        // frame control widget init
         ui.spinBox->setRange(1,10);
         ui.spinBox->setSingleStep(1);
         ui.spinBox->setValue(1);
         
+        // man must push "stop" to control the "show" button enable
         ui.pushButton->setEnabled(false);
 
-        flag_image_video = true;
-
+        // when new pointer, (this) is recommended to use qt frame to help free and delete memory
         ItemModel = new QStandardItemModel(this);
-
-        frame_video = 2 ;
-        factor = 1 ;
-
-        UpdateTopicList();
-
-        UpdatePointCloudTopicList();
-
         w =  new MainWindow(this);
 
-        pub_time = nh.advertise<std_msgs::Header>("time", 10);
+        UpdateTopicList();
+        UpdatePointCloudTopicList();
 
-        pub_camerainfo = nh.advertise<sensor_msgs::CameraInfo>(camera_info_name, 10);
-
-        pub_projection = nh.advertise<rviz_calibration::projection_matrix>(projection_matrix_name,10);
-
-        pub_point_image = nh.advertise<rviz_calibration::PointsImage>("points_image",10);
-
+        // use comboBox event 
         ui.image_topic_comboBox->installEventFilter(this);
         ui.comboBox_PointCloud->installEventFilter(this);
+
+        //init publisher 
+        pub_time = nh.advertise<std_msgs::Header>("time", 10);
+        pub_camerainfo = nh.advertise<sensor_msgs::CameraInfo>(camera_info_name, 10);
+        pub_projection = nh.advertise<rviz_calibration::projection_matrix>(projection_matrix_name,10);
+        pub_point_image = nh.advertise<rviz_calibration::PointsImage>("points_image",10);
+        points_image_msg = rviz_calibration::PointsImage::Ptr(new rviz_calibration::PointsImage);
 
         QObject::connect(this,SIGNAL(selectPoint(QPoint)),this,SLOT(showPoint(QPoint)));
         QObject::connect(ui.image_topic_comboBox,SIGNAL(activated(int)),this,SLOT(image_topic_comboBox_activated(int)));
@@ -73,15 +50,38 @@ namespace rviz_calibration
         QObject::connect(ui.pushButton_2,SIGNAL(clicked()),this,SLOT(saveCurrentPixmap()));
         QObject::connect(ui.spinBox,SIGNAL(valueChanged(int)),this,SLOT(setVideoFrame(int)));
         QObject::connect(this,SIGNAL(scale2normal()),w,SLOT(resetViewScale()));
-        QObject::connect(ui.StartRectifier,SIGNAL(clicked(bool)),this,SLOT(StartRectifierNode()));
+        QObject::connect(ui.StartRectifier,SIGNAL(clicked(bool)),this,SLOT(StartRectifierNode(bool)));
         QObject::connect(ui.openfile,SIGNAL(clicked()),this,SLOT(openFile()));
         QObject::connect(ui.ShowData,SIGNAL(clicked()),this,SLOT(ShowCameraInfo()));
         QObject::connect(ui.publishCameraInfo,SIGNAL(clicked()),this,SLOT(PublishCameraInfo()));
         QObject::connect(ui.convertPointImage,SIGNAL(clicked(bool)),this,SLOT(startConvertPoint2Image(bool)));
-
-        points_image_msg = rviz_calibration::PointsImage::Ptr(new rviz_calibration::PointsImage);
+        QObject::connect(ui.display_points_on_image,SIGNAL(clicked(bool)),this,SLOT(update_points_show_with_image(bool)));
+        QObject::connect(ui.is_fisheye,SIGNAL(clicked(bool)),this,SLOT(updateCamearaType(bool)));
     }
     
+    void ImageCalibrator::updateCamearaType(bool checked){
+        if(checked)
+        {
+            if(CameraType == "fisheye")
+                camera_is_fisheye = true;
+            else
+            {
+                QMessageBox::warning(this, "warning", "CameraType is not fisheye", QMessageBox::Yes, QMessageBox::Yes);
+                checked = false;
+            }
+        }
+    }
+
+    void ImageCalibrator::update_points_show_with_image(bool checked){
+        if(checked == true)
+        {
+            points_show_with_image = true;
+        }
+        else{
+            points_show_with_image = false;
+        }
+    }
+
     void ImageCalibrator::startConvertPoint2Image(bool checked){
         if(checked == true){
             points_image_sended = true;
@@ -182,8 +182,6 @@ namespace rviz_calibration
     void ImageCalibrator::ShowCameraInfo(){
         ReadCameraParameter(parameter_path);
 
-        //ui.listViewCamera->clear();
-
         QString s_cam_m = Mat2QString(CameraMat);
         QStandardItem *cam_name = new QStandardItem("CameraMat");
         ItemModel->appendRow(cam_name);
@@ -217,16 +215,6 @@ namespace rviz_calibration
         ItemModel->appendRow(camera_type);
 
         ui.listViewCamera->setModel(ItemModel);
-
-        // pointerManagement(cam_name);
-        // pointerManagement(cam_m);    
-        // pointerManagement(dis_name);
-        // pointerManagement(distcoeff);
-        // pointerManagement(ImageSize_name);
-        // pointerManagement(cam_size);
-        // pointerManagement(DistModel_name);
-        // pointerManagement(dist);
-    
     }
 
     void ImageCalibrator::initMatrix(const cv::Mat& cameraExtrinsicMat)
@@ -334,10 +322,8 @@ namespace rviz_calibration
     }
 
     void ImageCalibrator::pointerManagement(QStandardItem* p){
-        qDebug()<<"1";
         if(p != NULL)
         {
-            qDebug()<<"2";
             delete p;
             p = NULL;
         }
@@ -362,8 +348,7 @@ namespace rviz_calibration
         cv::FileStorage fs(path_std, cv::FileStorage::READ);
 	    if (!fs.isOpened())
 	    {
-		    //std::cout << "Cannot open " << argv[1] << std::endl;
-		    //return -1;
+            QMessageBox::information(this,"error","Cannot open this .yaml file");
             qDebug()<<"Cannot open"<<path;
 	    }
 
@@ -376,6 +361,7 @@ namespace rviz_calibration
     }
 
     void ImageCalibrator::openFile(){
+
         QFileDialog *fileDialog = new QFileDialog(this);
         //定义文件对话框标题
         fileDialog->setWindowTitle(tr("open yaml"));
@@ -401,15 +387,7 @@ namespace rviz_calibration
 
     void ImageCalibrator::showImage(QPixmap &picture)
     {
-        if(points_image_sended == false){
-            int height = ui.labelImage->height();
-            int width = ui.labelImage->width();
-            ui.labelImage->setPixmap(picture.scaled(width,
-                                               height,
-                                               Qt::KeepAspectRatio,
-                                               Qt::SmoothTransformation));
-        }
-        else{
+        if(points_show_with_image && points_image_sended == true ){
             points_drawer.Draw(points_image_msg, viewed_image, 3);
             QPixmap view_on_ui_with_points = convert_image::CvMatToQPixmap(viewed_image);
             int height = ui.labelImage->height();
@@ -419,10 +397,19 @@ namespace rviz_calibration
                                                Qt::KeepAspectRatio,
                                                Qt::SmoothTransformation));
         }
+        else{
+            int height = ui.labelImage->height();
+            int width = ui.labelImage->width();
+            ui.labelImage->setPixmap(picture.scaled(width,
+                                               height,
+                                               Qt::KeepAspectRatio,
+                                               Qt::SmoothTransformation));
+        }
     }
 
-    void ImageCalibrator::StartRectifierNode(){
-        if (camera_info_delivery == true ){
+    void ImageCalibrator::StartRectifierNode(bool checked){
+        if(checked){
+            if (camera_info_delivery == true ){
             image_topic_name_current = ui.image_topic_comboBox->currentText();
             QString image_topic_type_current;
 
@@ -433,17 +420,36 @@ namespace rviz_calibration
             
             image_topic_name_std = image_topic_name_current.toStdString();
             std::string image_topic_type_std = image_topic_type_current.toStdString();
-            //sub_image.shutdown();
-
+            
             image_topic_name_current.push_back("/rectifier");
 
+            if(camera_is_fisheye){
+                //鱼眼相机畸变矫正代码
+            /*
+
+
+
+
+
+
+
+            */
+        }
+        else{  
             if(image_topic_type_std == "sensor_msgs/CompressedImage")
                 sub_image_for_rect = nh.subscribe<sensor_msgs::CompressedImage>(image_topic_name_std,1,&ImageCalibrator::DistCorrectionCompressedImageCallback,this);
             else if(image_topic_type_std == "sensor_msgs/Image")
                 sub_image_for_rect = nh.subscribe<sensor_msgs::Image>(image_topic_name_std,1,&ImageCalibrator::DistCorrectionImageCallback,this);
         }
+        }
+
         else{
             QMessageBox::warning(this,"error","topic /camera_info has not been published");
+            }
+        }
+        else{
+            sub_image_for_rect.shutdown();
+            UpdateTopicList();
         }
     }
 
@@ -509,7 +515,6 @@ namespace rviz_calibration
             image_topic_current = kBlankTopic;
         }
 
-
         // // Insert blank topic name to the top of the lists
         image_topic_list << kBlankTopic;
 
@@ -538,9 +543,7 @@ namespace rviz_calibration
         // set new items to combo box
         ui.image_topic_comboBox->addItems(image_topic_list);
  
-
         ui.image_topic_comboBox->insertSeparator(1);
-
 
         // set last topic as current
         int image_topic_index = ui.image_topic_comboBox->findText(image_topic_current);
@@ -591,9 +594,7 @@ namespace rviz_calibration
         // set new items to combo box
         ui.comboBox_PointCloud->addItems(points_topic_list);
  
-
         ui.comboBox_PointCloud->insertSeparator(1);
-
 
         // set last topic as current
         int points_topic_index = ui.comboBox_PointCloud->findText(points_topic_current);
@@ -646,9 +647,9 @@ namespace rviz_calibration
             view_on_ui = convert_image::CvMatToQPixmap(viewed_image);
         }
 
-        //update();
         showImage(view_on_ui);
     }
+
     void ImageCalibrator::CompressedImageCallback(const sensor_msgs::CompressedImage::ConstPtr& msg)
     {
         std_msgs::Header header_image;
@@ -678,9 +679,7 @@ namespace rviz_calibration
             view_on_ui = convert_image::CvMatToQPixmap(viewed_image);
         }
 
-        //update();
         showImage(view_on_ui);
-
     }
 
     void ImageCalibrator::image_topic_comboBox_activated(int index)
@@ -689,6 +688,11 @@ namespace rviz_calibration
         std::string selected_topic = ui.image_topic_comboBox->itemText(index).toStdString();
         QString topic_name = QString::fromStdString(selected_topic);
         QString topic_type;
+
+        if(topic_name.contains("rectifier")){
+            ui.pushButton->setEnabled(false);
+            ui.pushButton_2->setEnabled(false);
+        }
 
         if (selected_topic == kBlankTopic.toStdString() || selected_topic == "")
         {
@@ -701,8 +705,6 @@ namespace rviz_calibration
         it_topic = map_topicName_topicType.find(topic_name);
         if(it_topic != map_topicName_topicType.end())
             topic_type = it_topic.value();
-        // if selected topic is not blank or empty, start callback function
-        //default_image_shown_ = false;
         if(topic_type == "sensor_msgs/CompressedImage")
             sub_image = nh.subscribe<sensor_msgs::CompressedImage>(selected_topic , 1 , &ImageCalibrator::CompressedImageCallback , this);
         else if(topic_type == "sensor_msgs/Image")
@@ -726,135 +728,138 @@ namespace rviz_calibration
     void ImageCalibrator::showPoint(QPoint p)
     {
         point_count ++ ;
-        //ui.textBrowser->insertPlainText("Number of Point " + QString::number(point_count) + '(' + QString::number(p.x()) + ',' + QString::number(p.y()) + ')' + "\n");
     }
 
     void ImageCalibrator::paintEvent(QPaintEvent *e)
     {
-        // if (default_count == 0)
-        // {
-        //     QString s = "/home/nio/Pictures/xl.jpg";
+        // 这段代码是之前测试使用线性安全队列实现在在图像上绘制点
+        /*
+        if (default_count == 0)
+        {
+            QString s = "/home/nio/Pictures/xl.jpg";
 
-        //     QPixmap ima_show(s);
-
-
-        //     QSize q_size= ui.widget->size();
-        //     //QSize q_size= ui.graphicsView->size();
-
-        //     ima_show = ima_show.scaled(q_size,Qt::KeepAspectRatio);
-
-        //     QPainter p(this);
-
-        //     p.drawPixmap(ui.widget->pos(), ima_show);
-        //     //p.drawPixmap(ui.graphicsView->pos(), ima_show);
-
-        //     p.setPen(QPen(Qt::red, 2, Qt::DashDotLine)); //设置封闭图像的填充颜色,从BrushStyle文件中找，要学会查询函数的使用准则
-
-        //     //Get data from transport buffer
-        //     QPoint po;
-        //     if(point_trans_buffer.try_pop(po))
-        //     {
-        //         //Push data into display buffer
-        //         point_display_buffer.push(po);
-        //     }
+            QPixmap ima_show(s);
 
 
-        //     //loop the display buffer
-        //     point_display_buffer.mut.lock();
-        //     for(auto point:point_display_buffer.data_queue)
-        //     {
-        //         p.drawPoint(point);
-        //     }
-        //     point_display_buffer.mut.unlock();
-        // }
+            QSize q_size= ui.widget->size();
+            //QSize q_size= ui.graphicsView->size();
+
+            ima_show = ima_show.scaled(q_size,Qt::KeepAspectRatio);
+
+            QPainter p(this);
+
+            p.drawPixmap(ui.widget->pos(), ima_show);
+            //p.drawPixmap(ui.graphicsView->pos(), ima_show);
+
+            p.setPen(QPen(Qt::red, 2, Qt::DashDotLine)); //设置封闭图像的填充颜色,从BrushStyle文件中找，要学会查询函数的使用准则
+
+            //Get data from transport buffer
+            QPoint po;
+            if(point_trans_buffer.try_pop(po))
+            {
+                //Push data into display buffer
+                point_display_buffer.push(po);
+            }
+
+
+            //loop the display buffer
+            point_display_buffer.mut.lock();
+            for(auto point:point_display_buffer.data_queue)
+            {
+                p.drawPoint(point);
+            }
+            point_display_buffer.mut.unlock();
+        }
         
-        // else
-        // {
+        else
+        {
 
-        //     QPixmap ima_show(view_on_ui);
-
-
-        //     QSize q_size= ui.widget->size();
-        //     //QSize q_size= ui.graphicsView->size();
-
-        //     ima_show = ima_show.scaled(q_size,Qt::KeepAspectRatio);
-
-        //     QPainter p(this);
-
-        //     p.drawPixmap(ui.widget->pos(), ima_show);
-        //     //p.drawPixmap(ui.graphicsView->pos(), ima_show);
-
-        //     p.setPen(QPen(Qt::red, 2, Qt::DashDotLine)); //设置封闭图像的填充颜色,从BrushStyle文件中找，要学会查询函数的使用准则
-
-        //     //Get data from transport buffer
-        //     QPoint po;
-        //     if(point_trans_buffer.try_pop(po))
-        //     {
-        //     //Push data into display buffer
-        //         point_display_buffer.push(po);
-        //     }
+            QPixmap ima_show(view_on_ui);
 
 
-        // //loop the display buffer
-        //     point_display_buffer.mut.lock();
-        //     for(auto point:point_display_buffer.data_queue)
-        //     {
-        //         p.drawPoint(point);
-        //     }
-        //     point_display_buffer.mut.unlock();
+            QSize q_size= ui.widget->size();
+            //QSize q_size= ui.graphicsView->size();
 
-        // }
-  
+            ima_show = ima_show.scaled(q_size,Qt::KeepAspectRatio);
 
+            QPainter p(this);
+
+            p.drawPixmap(ui.widget->pos(), ima_show);
+            //p.drawPixmap(ui.graphicsView->pos(), ima_show);
+
+            p.setPen(QPen(Qt::red, 2, Qt::DashDotLine)); //设置封闭图像的填充颜色,从BrushStyle文件中找，要学会查询函数的使用准则
+
+            //Get data from transport buffer
+            QPoint po;
+            if(point_trans_buffer.try_pop(po))
+            {
+            //Push data into display buffer
+                point_display_buffer.push(po);
+            }
+
+
+        //loop the display buffer
+            point_display_buffer.mut.lock();
+            for(auto point:point_display_buffer.data_queue)
+            {
+                p.drawPoint(point);
+            }
+            point_display_buffer.mut.unlock();
+
+        }
+        */
     }
 
     void ImageCalibrator::mousePressEvent(QMouseEvent *event)
     {
-        // QPoint p = ui.widget->pos();
-        // int p_x = p.x();
-        // int p_y = p.y();
-        // int p_w = ui.widget->width();
-        // int p_h = ui.widget->height();
-        // //QPoint p = ui.graphicsView->pos();
-        // //int p_x = p.x();
-        // //int p_y = p.y();
-        // //int p_w = ui.graphicsView->width();
-        // //int p_h = ui.graphicsView->height();
+        //同上
+        /*
+        QPoint p = ui.widget->pos();
+        int p_x = p.x();
+        int p_y = p.y();
+        int p_w = ui.widget->width();
+        int p_h = ui.widget->height();
+        //QPoint p = ui.graphicsView->pos();
+        //int p_x = p.x();
+        //int p_y = p.y();
+        //int p_w = ui.graphicsView->width();
+        //int p_h = ui.graphicsView->height();
 
-        // //event->button();
-        // if(event->button() == Qt::LeftButton)
-        // {
-        //     QPoint p = event->pos();
-        //     if(event->x() >= p_x && event->x() <= (p_x + p_w) && event->y() >= p_y && event->y() <= (p_y+p_h))
-        //     {
-        //         point_trans_buffer.push(p);
-        //     }
-        //     //point_trans_buffer.push(p);
-        //     Q_EMIT selectPoint(p);
+        //event->button();
+        if(event->button() == Qt::LeftButton)
+        {
+            QPoint p = event->pos();
+            if(event->x() >= p_x && event->x() <= (p_x + p_w) && event->y() >= p_y && event->y() <= (p_y+p_h))
+            {
+                point_trans_buffer.push(p);
+            }
+            //point_trans_buffer.push(p);
+            Q_EMIT selectPoint(p);
 
-        //     update();
-        // }
-        // if(event->button() == Qt::RightButton)
-        // {
-        //     if(event->x() >= p_x && event->x() <= (p_x + p_w) && event->y() >= p_y && event->y() <= (p_y+p_h))
-        //     {
-        //         point_display_buffer.mut.lock();
+            update();
+        }
+        if(event->button() == Qt::RightButton)
+        {
+            if(event->x() >= p_x && event->x() <= (p_x + p_w) && event->y() >= p_y && event->y() <= (p_y+p_h))
+            {
+                point_display_buffer.mut.lock();
 
-        //     //clear the display buffer
-        //         point_display_buffer.data_queue.clear();
+            //clear the display buffer
+                point_display_buffer.data_queue.clear();
 
-        //     //loop the display buffer
-        //         point_display_buffer.mut.unlock();
+            //loop the display buffer
+                point_display_buffer.mut.unlock();
 
-        //         point_count = 0;
+                point_count = 0;
 
-        //         Q_EMIT clearPonit();
+                Q_EMIT clearPonit();
 
-        //         update();
-        //     }
-        //     //loop the display buffer
+                update();
+            }
+            //loop the display buffer
 
-        // }
+        }
+        */
     }
 
     void ImageCalibrator::clearSelectPonit()
@@ -864,18 +869,11 @@ namespace rviz_calibration
 
     void ImageCalibrator::toImageCalibration()
     {
-        // MainWindow w;
-        // QObject::connect(this,SIGNAL(setPixMap(QPixmap)),&w,SLOT(setBackGroundPic(QPixmap)));
-        // w.show();
-        
-        // w =  new MainWindow(this);
-
-        // QObject::connect(this,SIGNAL(setPixMap(QPixmap)),w,SLOT(setBackGroundPic(QPixmap)));
         w->show();
     }
 
     DrawPoints::DrawPoints(void) {
-    // set color map
+        // set color map
         cv::Mat gray_scale(256, 1, CV_8UC1);
 
         for (int i = 0; i < 256; i++) {
@@ -998,5 +996,4 @@ namespace rviz_calibration
 #include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(rviz_calibration::ImageCalibrator, rviz::Panel )
 
-// END_TUTORIAL
 

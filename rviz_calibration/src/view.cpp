@@ -1,11 +1,5 @@
 #include "view.h"
 
-#include <QMouseEvent>
-#include <QKeyEvent>
-#include <QGraphicsItem>
-#include <QDebug>
-#include <QTime>
-
 namespace rviz_calibration
 {
 View::View(QWidget *parent) :
@@ -53,9 +47,8 @@ void View::mousePressEvent(QMouseEvent *event)
         QGraphicsView::mousePressEvent(event);
 
         QPoint viewPos = event->pos();
-        //qDebug() << "viewPos: " << viewPos;
         QPointF scenePos = mapToScene(viewPos);
-        //qDebug() << "scenePos: " << scenePos;
+
         Q_EMIT sendP(scenePos);
     }
     else
