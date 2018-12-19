@@ -1,0 +1,9 @@
+<!-- -->
+<launch>
+
+    <arg name="save_path_" default="/ros/catkin_ws/lidar_board/" />
+    <node pkg="nio_calibration_tool" type="calib_board_detection_node" name="calib_board_detection_node" output="screen">
+        <param name = "save_path" type="string" value = "$(arg save_path_)" />
+    </node>
+
+</launch>	

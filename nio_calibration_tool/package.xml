@@ -1,0 +1,23 @@
+<package format="2">
+  <name>nio_calibration_tool</name>
+  <version>0.0.1</version>
+  <description>
+    calibration tools
+  </description>
+  <author>lihong.weng</author>
+  <maintainer email="lihong.weng@nio.com">lihong.weng</maintainer>
+  <license>BSD</license>
+  <url></url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf</depend>
+
+</package>
+
