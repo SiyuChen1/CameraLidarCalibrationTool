@@ -13,4 +13,9 @@ This is a ros node for object detection,which data are shown in sensor_msgs/Poin
 
 ## Function need to develop
 - [ ] Show Widget for PointCloud
+
+#### document reference for display widget of PointCloud
+> http://www.pointclouds.org/documentation/
+
 - [x] Image Calibration
+#### By Rong
