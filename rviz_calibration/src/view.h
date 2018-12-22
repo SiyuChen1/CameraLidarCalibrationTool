@@ -23,6 +23,8 @@ Q_SIGNALS:
     void sendColorIndex(int index);
     void deleteLastPoint();
     void scaleChanged(double scale);
+    void repaintPoints();
+    void updateListView();
 public Q_SLOTS:
     void changeView();
 private:

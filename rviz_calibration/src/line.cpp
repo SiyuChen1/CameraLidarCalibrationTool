@@ -12,15 +12,6 @@ void Line::setLineScale(double scale)
 {
     this->scale = scale;
 }
-// void Line::resetLine(QPointF p,double scale)
-// {
-//     QBrush brush(line_color,Qt::SolidPattern);
-//     QPen pen(brush,10/scale,Qt::SolidLine,Qt::SquareCap,Qt::BevelJoin);
-//     setPen(pen);
-//     qDebug()<<2/scale<<"2/scale";
-//     setLine(QLineF(p,p));
-//     start = p;
-// }
 
 void Line::startDraw(QGraphicsSceneMouseEvent * event)
 {
@@ -33,6 +24,11 @@ void Line::drawing(QGraphicsSceneMouseEvent * event)
     QLineF newLine(line().p1(), event->scenePos());
     setLine(newLine);
     end = event->scenePos();
+}
+
+void Line::reDraw(QPointF p){
+    QLineF Line_repaint(p,p);
+    setLine(Line_repaint);
 }
 
 void Line::setLineColor(int count)
@@ -117,7 +113,8 @@ void Line::setLineColor(int count)
         }                
     }
     QBrush brush(line_color,Qt::SolidPattern);
-    QPen pen(brush,1/this->scale,Qt::SolidLine,Qt::SquareCap,Qt::BevelJoin);
+    qDebug()<<this->scale<<"current";
+    QPen pen(brush,2/this->scale,Qt::SolidLine,Qt::SquareCap,Qt::BevelJoin);
     setPen(pen);
 }
 

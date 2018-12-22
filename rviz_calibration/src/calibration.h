@@ -66,6 +66,11 @@
 
 #endif
 
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
+const std::string DEFAULT_PATH = STR(IMAGE_DEFAULT_PATH);
+
 namespace rviz_calibration
 {
 

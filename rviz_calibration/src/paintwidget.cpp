@@ -42,7 +42,7 @@ void PaintWidget::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 {
                         Line *line = new Line;
                         count ++;
-                        qDebug()<<scale_factor;
+                        qDebug()<<scale_factor<<"line";
                         line->setLineScale(scale_factor);
                         line->setLineColor(count);
                         currItem = line;
@@ -99,7 +99,7 @@ void PaintWidget::resetItem()
     QList<QGraphicsItem*> li = this->items();
     QGraphicsItem *it;
     Line *s_line = new Line;
-    qDebug()<<li.size();
+    //qDebug()<<li.size();
     for(int i = 0;i<li.size();i++)
     {
         it = li.at(i);
@@ -129,6 +129,33 @@ void PaintWidget::removeLastItem()
             delete it;
             it = NULL;
         }
+    }
+}
+
+void PaintWidget::repaint()
+{
+    count = 0;
+    QList<QGraphicsItem*> li = this->items();
+    QList<Line*> li_for_line;
+    QGraphicsItem *it;
+    Line *s_line = new Line;
+    for(int i = 0;i<li.size();i++)
+    {
+        it = li.at(i);
+        s_line = dynamic_cast<Line*>(it);
+        li_for_line.append(s_line);
+        removeItem(it);
+    }
+    qDebug()<<li_for_line.size()<<"size";
+    for(int i = 0;i<li_for_line.size();i++)
+    {
+        s_line = li_for_line.at(i);
+        qDebug()<<s_line->start;
+        s_line->setLineScale(scale_factor);
+        s_line->setLineColor(count);
+        s_line->reDraw(s_line->start);
+        addItem(s_line);
+        count ++;
     }
 }
 

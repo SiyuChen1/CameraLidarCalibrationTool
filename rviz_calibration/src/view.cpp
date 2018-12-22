@@ -21,11 +21,15 @@ void View::keyPressEvent(QKeyEvent *event)
         scale(1.2,1.2);
         scale_factor *= 1.2;
         Q_EMIT scaleChanged(scale_factor);
+        Q_EMIT repaintPoints();
         break;
     case Qt::Key_Minus:
-        scale(1/1.2,1/1.2);
-        scale_factor /= 1.2;
-        Q_EMIT scaleChanged(scale_factor);
+        if(scale_factor > 1){
+            scale(1.0/1.2,1.0/1.2);
+            scale_factor /= 1.2;
+            Q_EMIT scaleChanged(scale_factor);
+            Q_EMIT repaintPoints();
+        }
         break;
     case Qt::Key_R :
         rotate(30);
@@ -54,6 +58,7 @@ void View::mousePressEvent(QMouseEvent *event)
     else
     {
         Q_EMIT deleteLastPoint();
+        Q_EMIT updateListView();
     }
 }
 

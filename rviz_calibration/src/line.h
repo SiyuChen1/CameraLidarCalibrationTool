@@ -22,7 +22,7 @@ public:
     void drawing(QGraphicsSceneMouseEvent * event);
     void setLineColor(int count);
     void setLineScale(double scale);
-    // void resetLine(QPointF p,double scale);
+    void reDraw(QPointF p);
 
 private:
     QColor line_color = Qt::yellow;

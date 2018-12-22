@@ -119,6 +119,13 @@ set(SRC_FILES
 ## is called) and specify the list of source files we collected above
 ## in ``${SOURCE_FILES}``.
 add_library(${PROJECT_NAME} ${SRC_FILES})
+
+set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        COMPILE_FLAGS
+        "-DIMAGE_DEFAULT_PATH=${CMAKE_CURRENT_SOURCE_DIR}"
+        )
+
  
 ## Link the library with whatever Qt libraries have been defined by
 ## the ``find_package(Qt4 ...)`` line above, and with whatever libraries

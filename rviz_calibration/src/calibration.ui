@@ -281,13 +281,6 @@
         </layout>
        </item>
       </layout>
-      <zorder>label_3</zorder>
-      <zorder>comboBox</zorder>
-      <zorder>horizontalSpacer_12</zorder>
-      <zorder>checkBox</zorder>
-      <zorder>horizontalSpacer_13</zorder>
-      <zorder>display_points_on_image</zorder>
-      <zorder>is_fisheye</zorder>
       <zorder></zorder>
      </widget>
      <widget class="QWidget" name="tab_2">
@@ -409,7 +402,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>11</x>
@@ -460,7 +453,7 @@
           <item>
            <widget class="QCheckBox" name="checkBoxforPointCloud">
             <property name="text">
-             <string>Start PointCloud Calibration</string>
+             <string>Remove Ground</string>
             </property>
            </widget>
           </item>

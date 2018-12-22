@@ -62,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent)
         connect(this,SIGNAL(signal2ChangePaintWidget()),paintWidget,SLOT(resetItem()));
         connect(view,SIGNAL(deleteLastPoint()),paintWidget,SLOT(removeLastItem()));
         connect(view,SIGNAL(scaleChanged(double)),paintWidget,SLOT(getScaleFactor(double)));
+        connect(view,SIGNAL(repaintPoints()),paintWidget,SLOT(repaint()));
+        connect(view,SIGNAL(updateListView()),this,SLOT(updateText()));
         connect(this,SIGNAL(changeViewScale()),view,SLOT(changeView()));
 }
 
@@ -99,6 +101,10 @@ MainWindow::~MainWindow()
     }
 }
 
+void MainWindow::updateText(){
+    
+}
+
 void MainWindow::resetViewScale()
 {
     Q_EMIT changeViewScale();
@@ -106,7 +112,7 @@ void MainWindow::resetViewScale()
 
 void MainWindow::showColorName(int count)
 {
-    qDebug()<<"test";
+    //qDebug()<<"test";
     QColor line_color;
     count = count % 15 ;
     switch(count)
@@ -209,7 +215,7 @@ void MainWindow::setBackGroundPic(QPixmap image)
     sc->setBackgroundBrush(backgroundPic);
 
     sc->setSceneRect(0, 0, image.width(), image.height());
-    qDebug()<<image.width()<<","<<image.height();
+    //qDebug()<<image.width()<<","<<image.height();
     view->setScene(sc);
 }
 
@@ -233,7 +239,8 @@ void MainWindow::showPoints(QPointF p)
 
 void MainWindow::writeFile()
 {
-    QFile file("/home/nio/text.txt");
+    QString write_path = QString::fromStdString(DEFAULT_SOURCE_PATH) + "/data/points.txt";
+    QFile file(write_path);
     if(!file.open(QIODevice::ReadWrite | QIODevice::Append))
     {
         qDebug()<<file.errorString();

@@ -9,7 +9,9 @@ namespace rviz_calibration
         // Initialize Form
         ui.setupUi(this);
 
-        cv::Mat default_image = cv::imread("/home/nio/catkin_ws/src/rviz_calibration/src/nio.jpg");
+        std::string default_source_image_path = DEFAULT_PATH + "/image/nio.jpg";
+
+        cv::Mat default_image = cv::imread(default_source_image_path);
         QPixmap pixmap_default = convert_image::CvMatToQPixmap(default_image);
         pixmap_default = pixmap_default.scaled(ui.labelImage->width(),ui.labelImage->height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
         ui.labelImage->setPixmap(pixmap_default);

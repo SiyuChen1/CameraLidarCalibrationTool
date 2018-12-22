@@ -33,6 +33,7 @@ public Q_SLOTS:
         void resetItem();
         void removeLastItem();
         void getScaleFactor(double scale);
+        void repaint();
 
 protected:
         void mousePressEvent(QGraphicsSceneMouseEvent *event);

@@ -12,6 +12,7 @@ public:
     enum Code {Line,Rect};
     virtual void startDraw(QGraphicsSceneMouseEvent * event) = 0;
     virtual void drawing(QGraphicsSceneMouseEvent * event) = 0;
+    //virtual void reDraw(QPointF p) = 0;
 };
 }
 

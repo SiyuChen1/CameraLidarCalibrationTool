@@ -24,7 +24,10 @@
 #include <QFile>
 #include <QTextStream>
 
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
 
+const std::string DEFAULT_SOURCE_PATH = STR(IMAGE_DEFAULT_PATH);
 
 namespace rviz_calibration
 {
@@ -64,6 +67,8 @@ public Q_SLOTS:
     void showPoints(QPointF p);
     void showColorName(int count);
     void writeFile();
+
+    void updateText();
 };
 
 }
